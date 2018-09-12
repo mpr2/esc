@@ -10,7 +10,8 @@ if(src && dest) {
         fs.readFile(src, {encoding: 'utf-8', flag: 'r'}, (err, data) => {
             if(err) throw err;
 
-            const hack = parser.assemble(parser.getInstructionList(data))
+            const instructionList = parser.getInstructionList(data)
+            const hack = parser.assemble(parser.firstPass(instructionList))
 
             fs.writeFile(dest, hack.trim(), (err) => {
                 if(err) throw err;

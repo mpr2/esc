@@ -1,5 +1,7 @@
 const R = require('ramda')
 const code = require('./code.js')
+const symbol = require('./symboltable.js')
+
 
 /**
  * Accepts a source code string and returns
@@ -11,6 +13,79 @@ const getInstructionList = R.pipe (
     R.map(R.trim),
     R.filter(R.pipe(R.isEmpty, R.not))
 )
+
+/**
+ * Given an instruction list and a symbol table, returns the
+ * updated symbol table containing the addresses of the labels
+ * declared in the instruction list
+ */
+const updateSymbolTable = function (instructionList, symbolTable) {
+    const table = R.addIndex(R.reduce)(
+        (acc, v, i) => {
+            if(R.test(/\(.*\)/)(v))
+                //if the instruction is a label declaration,
+                //insert its name in the symbol table
+                return R.assoc(R.match(/\((.*)\)/)(v)[1],
+                               i - R.length(R.keys(acc)), acc)
+            return acc
+        },
+        {},
+        instructionList
+    )
+
+    //merge the resulting table with the original table
+    return R.merge(table, symbolTable)
+}
+
+/**
+ * Replaces each symbol in the instruction list with its
+ * respective address value (both labels and variables)
+ */
+const resolveSymbols = function (instructionList, symbolTable) {
+    return R.mapAccum (
+        (acc, x) => {
+            //counter to keep track of how many
+            //variables were declared
+            const counter = acc[0]
+            //updated table with variable addresses
+            const table = acc[1]
+
+            if(R.test(/^@.*/)(x)) {
+                const name = R.match(/^@(.*)/)(x)[1]
+
+                if(isNaN(name)) { //name is a symbol
+                    if(!R.has(name, table)) {
+                        //if name is not in the table, add it
+                        //to the table and increment counter
+                        table[name] = counter
+                        return [[counter + 1, table],
+                                '@' + counter]
+                    }
+                    //if it is a symbol,
+                    //replace it by its address value
+                    return [[counter, table],
+                            '@' + table[name]]
+                }
+            }
+            return [[counter, table], x]
+        },
+        [16, symbolTable],
+        instructionList
+    )[1]
+}
+
+/**
+ * Removes label declarations from the instruction list
+ */
+const removeSymbols = R.filter(R.compose(R.not, R.test(/\(.*\)/)))
+
+/**
+ * Turns an instruction list into a symbol-less instruction list
+ */
+const firstPass = function (instructionList) {
+    const newTable = updateSymbolTable(instructionList, symbol.table)
+    return removeSymbols(resolveSymbols(instructionList, newTable))
+}
 
 /**
  * Returns the binary code of a symbol-less A instruction
@@ -40,7 +115,7 @@ const binOfC = R.pipe (
  * Takes a list of symbol-less instructions and
  * gives a string containing the assembled machine code
  */
-const assemble = R.pipe(
+const assemble = R.pipe (
     R.map ((v) => {
         if(v[0] == '@')
             return binOfA(v)
@@ -52,5 +127,6 @@ const assemble = R.pipe(
 
 module.exports = {
     getInstructionList: getInstructionList,
-    assemble: assemble
+    assemble: assemble,
+    firstPass: firstPass
 }
