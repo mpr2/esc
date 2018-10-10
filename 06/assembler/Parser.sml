@@ -9,29 +9,40 @@ fun readFile (file: string): TextIO.instream =
 fun inputc (is: TextIO.instream): int -> string =
   fn n => TextIO.inputN (is, n)
 
+fun lex2list (lex: unit->lexresult): lexresult list =
+  let
+    val t = lex()
+  in
+    case t of
+         EOF => nil
+       | _ => t::(lex2list lex)
+  end
+
+(*
 fun interp (lex: unit->lexresult):unit =
   let
     val token = lex()
   in
     case token of
-        ADDR(x) => (print("ADDR "^(Int.toString x)^"\n"); interp lex)
-      | SYMBOL(x) => (print("SYMBOL "^x^"\n"); interp lex)
-      | LABEL(x) => (print("LABEL "^x^"\n"); interp lex)
+        ADDR(x) => (print("ADDR "^(Int.toString x)^" "); interp lex)
+      | SYMBOL(x) => (print("SYMBOL "^x^" "); interp lex)
+      | LABEL(x) => (print("LABEL "^x^" "); interp lex)
       | REG(x) => (case x of
-                      A => (print("REG A\n"); interp lex)
-                    | M => (print("REG M\n"); interp lex)
-                    | D => (print("REG D\n"); interp lex))
+                      A => (print("REG A "); interp lex)
+                    | M => (print("REG M "); interp lex)
+                    | D => (print("REG D "); interp lex))
       | OP(x) => (case x of
-                     MINUS => (print("MINUS\n"); interp lex)
-                   | PLUS => (print("PLUS\n"); interp lex)
-                   | AND => (print("AND\n"); interp lex)
-                   | OR => (print("OR\n"); interp lex)
-                   | NOT => (print("NOT\n"); interp lex))
-      | ASSIGN => (print("ASSIGN\n"); interp lex)
-      | BIN(x) => ((if x then print("1\n") else print("0\n")); interp lex)
-      | JMP(x) => (print(x ^ "\n"); interp lex)
+                     MINUS => (print("MINUS "); interp lex)
+                   | PLUS => (print("PLUS "); interp lex)
+                   | AND => (print("AND "); interp lex)
+                   | OR => (print("OR "); interp lex)
+                   | NOT => (print("NOT "); interp lex))
+      | ASSIGN => (print("ASSIGN "); interp lex)
+      | BIN(x) => ((if x then print("1 ") else print("0 ")); interp lex)
+      | JMP(x) => (print(x ^ " "); interp lex)
+      | NEWLINE => (print("\n"); interp lex)
       | EOF => print("EOF\n")
   end
+*)
 
 end
-

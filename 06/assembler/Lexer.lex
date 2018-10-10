@@ -10,6 +10,15 @@ datatype oper =
   | OR
   | NOT
 
+datatype jmp =
+    JGT
+  | JEQ
+  | JGE
+  | JLT
+  | JNE
+  | JLE
+  | JMP
+
 datatype lexresult =
     ADDR of int
   | SYMBOL of string
@@ -18,8 +27,11 @@ datatype lexresult =
   | OP of oper
   | ASSIGN
   | BIN of bool
-  | JMP of string
+  | JUMP of jmp
+  | NEWLINE
   | EOF
+
+type Token = lexresult
 
 val eof = fn () => EOF
 
@@ -30,8 +42,9 @@ a = [a-zA-Z\_\.\$];
 d = [0-9];
 id = {a}({d}|{a})*;
 %%
-[\ \t\n\r]+       =>  (lex());
+[\ \t]+           =>  (lex());
 \/\/.*            =>  (lex());
+[\n\r]            =>  (NEWLINE);
 @                 =>  (YYBEGIN AT; lex());
 <AT>{id}          =>  (YYBEGIN INITIAL; SYMBOL yytext);
 <AT>{d}+          =>  (YYBEGIN INITIAL; ADDR (valOf(Int.fromString yytext)));
@@ -51,5 +64,11 @@ D                 =>  (REG D);
 0                 =>  (BIN false);
 1                 =>  (BIN true);
 \;                =>  (YYBEGIN SEMICOLON; lex());
-<SEMICOLON>{a}{3} =>  (YYBEGIN INITIAL; JMP yytext);
+<SEMICOLON>JGT    =>  (YYBEGIN INITIAL; JUMP JGT);
+<SEMICOLON>JEQ    =>  (YYBEGIN INITIAL; JUMP JEQ);
+<SEMICOLON>JGE    =>  (YYBEGIN INITIAL; JUMP JGE);
+<SEMICOLON>JLT    =>  (YYBEGIN INITIAL; JUMP JLT);
+<SEMICOLON>JNE    =>  (YYBEGIN INITIAL; JUMP JNE);
+<SEMICOLON>JLE    =>  (YYBEGIN INITIAL; JUMP JLE);
+<SEMICOLON>JMP    =>  (YYBEGIN INITIAL; JUMP JMP);
 .                 =>  (print ("erro " ^ (Int.toString (!yylineno)) ^ "\n"); lex());

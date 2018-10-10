@@ -2,4 +2,4 @@ $(SML_LIB)/basis/basis.mlb
 
 Lexer.lex.sml
 Parser.sml
-Assembler.sml
+ParserLib.sml
