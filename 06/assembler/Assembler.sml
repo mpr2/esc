@@ -18,6 +18,28 @@ val is = readFile (hd (CommandLine.arguments()))
 val lexer = Mlex.makeLexer(inputc is)
 val tokenlist = lex2list lexer
 
+
+
+fun printtokenlist tokenlist =
+    case tokenlist of
+        nil => ()
+      | h::t =>
+        case h of
+            ADDR x => (print "ADDR "; printtokenlist t)
+          | SYMBOL x => (print "SYMBOL "; printtokenlist t)
+          | LABEL x => (print "LABEL "; printtokenlist t)
+          | REG x => (print "REG "; printtokenlist t)
+          | OP x => (print "OP "; printtokenlist t)
+          | ASSIGN => (print "ASSIGN "; printtokenlist t)
+          | BIN x => (print "BIN "; printtokenlist t)
+          | JUMP x => (print "JUMP "; printtokenlist t)
+          | NEWLINE => (print "\n"; printtokenlist t)
+          | EOF => ()
+
+
+
+
+
 val (newSymbolTable, _, newTokenlist) =
     updateSymbolTable symbolTable tokenlist
 
@@ -27,5 +49,5 @@ val (_, _, symbollessTokenlist) =
 val result = run parseSymbolLess symbollessTokenlist;
 
 case result of
-    Failure err => print err
+    Failure err => print (err ^ "\n")
   | Success(hack, remaining) => print hack;

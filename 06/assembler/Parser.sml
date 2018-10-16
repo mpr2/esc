@@ -175,13 +175,15 @@ fun parseSymbInst (symbolTable, linum, lst) =
             Map.insert(t, label, n)
           end
 
-      val pA = (fn x => (symbolTable, linum + 1, lst@x)) |> parseASymbInst
-      val pC = (fn x => (symbolTable, linum + 1, lst@x)) |> parseCSymbInst
-      val pL = (fn x => (insert(x, linum, symbolTable),
-                         linum, lst)) |> parseLSymbInst
+      val pA = (fn x => (symbolTable, linum + 1, x@lst))
+                   |> parseASymbInst
+      val pC = (fn x => (symbolTable, linum + 1, (rev x)@lst))
+                   |> parseCSymbInst
+      val pL = (fn x => (insert(x, linum, symbolTable), linum, lst))
+                   |> parseLSymbInst
 
       val pNewline = sequenceP [ptoken NEWLINE <|> ptoken EOF]
-      fun keep (a, b) = (#1 a, #2 a, (#3 a)@b)
+      fun keep (a, b) = (#1 a, #2 a, b@(#3 a))
       val pNL = (fn x => (symbolTable, linum, lst)) |> pNewline
     in
       (keep |> ((pA <|> pC <|> pL) <&> pNewline) <|> pNL)
@@ -190,20 +192,20 @@ fun parseSymbInst (symbolTable, linum, lst) =
 
 fun resolveSymbInst (symbolTable, count, lst) =
     let
-      fun resolve [ADDR n] = (symbolTable, count, lst@[ADDR n])
+      fun resolve [ADDR n] = (symbolTable, count, [ADDR n]@lst)
         | resolve [SYMBOL s] =
           let val x = Map.find(symbolTable, s) in
             case x of
                 SOME n => resolve [ADDR n]
               | NONE => (Map.insert(symbolTable, s, count),
-                         count + 1, lst@[ADDR count])
+                         count + 1, [ADDR count]@lst)
           end
 
       val pA = resolve |> parseASymbInst
-      val pC = (fn x => (symbolTable, count, lst@x)) |> parseCSymbInst
+      val pC = (fn x => (symbolTable, count, (rev x)@lst)) |> parseCSymbInst
 
       val pNewline = sequenceP [ptoken NEWLINE <|> ptoken EOF]
-      fun keep (a, b) = (#1 a, #2 a, (#3 a)@b)
+      fun keep (a, b) = (#1 a, #2 a, b@(#3 a))
       val pNL = (fn x => (symbolTable, count, lst)) |> pNewline
     in
       (keep |> ((pA <|> pC) <&> pNewline) <|> pNL)
@@ -219,10 +221,21 @@ fun parseSymbols tuple f lst =
     end
 
 fun updateSymbolTable symbolTable input =
-    (parseSymbols (symbolTable, 0, []) parseSymbInst input)
+    let
+      val (st, linum, lst) =
+          (parseSymbols (symbolTable, 0, []) parseSymbInst input)
+    in
+      (st, linum, rev lst)
+    end
+      
 
 fun resolveSymbols symbolTable input =
-    (parseSymbols (symbolTable, 16, []) resolveSymbInst input)
+    let
+      val (st, count, lst) =
+          (parseSymbols (symbolTable, 16, []) resolveSymbInst input)
+    in
+      (st, count, rev lst)
+    end
 
 
 val parseCInstruction =
