@@ -18,7 +18,13 @@ val is = readFile (hd (CommandLine.arguments()))
 val lexer = Mlex.makeLexer(inputc is)
 val tokenlist = lex2list lexer
 
-val result = run parseSymbolLess tokenlist;
+val (newSymbolTable, _, newTokenlist) =
+    updateSymbolTable symbolTable tokenlist
+
+val (_, _, symbollessTokenlist) =
+    resolveSymbols newSymbolTable newTokenlist
+
+val result = run parseSymbolLess symbollessTokenlist;
 
 case result of
     Failure err => print err

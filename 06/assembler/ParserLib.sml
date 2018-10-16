@@ -1,5 +1,5 @@
 open Mlex.UserDeclarations
-         
+
 datatype 'a Result =
          Success of 'a
        | Failure of string
@@ -38,12 +38,40 @@ fun pAddr () =
         | parseFn (EOF::t) = Failure "No more input."
         | parseFn (h::t) =
           case h of
-              ADDR x => Success(x,t)
+              ADDR x => Success(ADDR x,t)
             | _ => Failure "Unexpected token."
     in
       Parser parseFn
     end
-val _ = pAddr: unit -> int Parser
+val _ = pAddr: unit -> Token Parser
+
+
+fun pLabel () =
+    let
+      fun parseFn nil = Failure "No more input."
+        | parseFn (EOF::t) = Failure "No more input."
+        | parseFn (h::t) =
+          case h of
+              LABEL x => Success(LABEL x, t)
+            | _ => Failure "Unexpected token."
+    in
+      Parser parseFn
+    end
+val _ = pLabel: unit -> Token Parser
+
+
+fun pSymbol () =
+    let
+      fun parseFn nil = Failure "No more input."
+        | parseFn (EOF::t) = Failure "No more input."
+        | parseFn (h::t) =
+          case h of
+              SYMBOL x => Success(SYMBOL x, t)
+            | _ => Failure "Unexpected token."
+    in
+      Parser parseFn
+    end
+val _ = pLabel: unit -> Token Parser
 
 
 fun bindP f parser =
@@ -195,3 +223,16 @@ fun optional parser =
       Parser parseFn
     end
 val _ = optional: 'a Parser -> 'a option Parser
+
+
+fun optionalSequence listOfParsers =
+    let
+      fun unwrap nil = nil
+        | unwrap (h::t) =
+          case h of
+              NONE => unwrap t
+            | SOME x => x :: (unwrap t)
+    in
+      unwrap |> ((sequenceP o List.map optional) listOfParsers)
+    end
+val _ = optionalSequence: 'a Parser list -> 'a list Parser
