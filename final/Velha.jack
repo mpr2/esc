@@ -1,0 +1,59 @@
+class Velha {
+    field Grid g;
+    
+    constructor Velha new() {
+        let g = Grid.new();
+        
+        return this;
+    }
+
+    method void run() {
+        var char key;
+        var boolean xTurn;
+        var int winner;
+
+        let xTurn = true;
+        do g.draw();
+
+        while(true) {
+            let key = Keyboard.keyPressed();
+
+            if(key = 130) {
+                do g.moveLeft();
+            }
+            if(key = 131) {
+                do g.moveUp();
+            }
+            if(key = 132) {
+                do g.moveRight();
+            }
+            if(key = 133) {
+                do g.moveDown();
+            }
+            if(key = 128) {
+                let xTurn = g.insertXO(xTurn);
+            }
+
+            let winner = g.checkWinner();
+            if(winner = 1) {
+                do Screen.clearScreen();
+                do Output.printString("X wins!");
+                return;
+            }
+            if(winner = -1) {
+                do Screen.clearScreen();
+                do Output.printString("O wins!");
+                return;
+            }
+            if(winner = 2) {
+                do Screen.clearScreen();
+                do Output.printString("Draw!");
+                return;
+            }
+
+            do Sys.wait(200);
+        }
+
+        return;
+    }
+}

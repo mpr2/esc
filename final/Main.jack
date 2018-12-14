@@ -1,0 +1,10 @@
+class Main {
+    function void main() {
+        var Velha v;
+        let v = Velha.new();
+
+        do v.run();
+
+        return;
+    }
+}

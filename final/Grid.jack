@@ -1,0 +1,218 @@
+class Grid {
+    static int X;
+    static int Y;
+    static int S;
+
+    field Array a;
+    field int cursor;
+    field int count;
+
+    constructor Grid new() {
+        let X = 160;
+        let Y = 32;
+        let S = 64;
+        let cursor = 0;
+        let a = Array.new(9);
+
+        let count = 0;
+        while(count < 9) {
+            let a[count] = 0;
+            let count = count + 1;
+        }
+
+        return this;
+    }
+
+    method void draw() {
+        do drawGrid();
+        do drawXO();
+        do drawCursor();
+        return;
+    }
+
+    method void drawGrid() {
+        do Screen.drawLine(X+S, Y, X+S, Y+(3*S));
+        do Screen.drawLine(X+(2*S), Y, X+(2*S), Y+(3*S));
+        do Screen.drawLine(X, Y+S, X+(3*S), Y+S);
+        do Screen.drawLine(X, Y+(2*S), X+(3*S), Y+(2*S));
+        return;
+    }
+
+    method void drawXO() {
+        let count = 0;
+        while(count < 9) {
+            if(a[count] = 1) {
+                do drawX(count);
+            }
+            if(a[count] = -1) {
+                do drawO(count);
+            }
+            let count = count + 1;
+        }
+        return;
+    }
+
+    method void drawX(int i) {
+        /*var int q, r, x, y;
+        let q = Math.divide(i, 3);
+        let r = i - (q*3);
+        let x = X+(r*S);
+        let y = Y+(q*S);*/
+
+        var int x, y;
+        let x = xFromIdx(i);
+        let y = yFromIdx(i);
+
+        do Screen.setColor(true);
+        do Screen.drawLine(x, y, x+S, y+S);
+        do Screen.drawLine(x, y+S, x+S, y);
+        return;
+    }
+
+    method void drawO(int i) {
+        /*var int q, r, x, y;
+        let q = Math.divide(i, 3);
+        let r = i - (q*3);
+        let x = X+(r*S);
+        let y = Y+(q*S);*/
+
+        var int x, y;
+        let x = xFromIdx(i);
+        let y = yFromIdx(i);
+        
+        do Screen.setColor(true);
+        do Screen.drawCircle(x+(S/2), y+(S/2), (S/2) - 2);
+        return;
+    }
+
+    method void drawCursor() {
+        var int x, y, c;
+        let x = xFromIdx(cursor);
+        let y = yFromIdx(cursor);
+        let c = 5;
+
+        if(a[cursor] = -1) {
+            do Screen.setColor(false);
+        } else {
+            do Screen.setColor(true);
+        }
+
+        do Screen.drawLine(x+(S/2), y+(S/2)-c, x+(S/2), y+(S/2)+c);
+        do Screen.drawLine(x+(S/2)-c, y+(S/2), x+(S/2)+c, y+(S/2));
+        return;
+    }
+
+    method int rest(int a, int b) {
+        return a - (Math.divide(a,b)*b);
+    }
+
+    method int xFromIdx(int i) {
+        return X + (rest(i,3) * S);
+    }
+    method int yFromIdx(int i) {
+        return Y + (Math.divide(i,3) * S);
+    }
+
+    method void eraseCursor() {
+        var int x, y;
+        let x = xFromIdx(cursor);
+        let y = yFromIdx(cursor);
+
+        if(a[cursor] = 0) {
+            do Screen.setColor(false);
+            do Screen.drawRectangle(x+1, y+1, x+S-1, y+S-1);
+        }
+        if(a[cursor] = -1) {
+            do drawO(cursor);
+        }
+        if(a[cursor] = 1) {
+            do Screen.setColor(false);
+            do Screen.drawRectangle(x+1, y+1, x+S-1, y+S-1);
+            do Screen.setColor(true);
+            do drawX(cursor);
+        }
+        return;
+    }
+
+    method void moveLeft() {
+        if(rest(cursor,3) > 0) {
+            do eraseCursor();
+            let cursor = cursor - 1;
+            do drawCursor();
+        }
+        return;
+    }
+
+    method void moveUp() {
+        if(Math.divide(cursor,3) > 0) {
+            do eraseCursor();
+            let cursor = cursor - 3;
+            do drawCursor();
+        }
+        return;
+    }
+
+    method void moveRight() {
+        if(rest(cursor,3) < 2) {
+            do eraseCursor();
+            let cursor = cursor + 1;
+            do drawCursor();
+        }
+        return;
+    }
+
+    method void moveDown() {
+        if(Math.divide(cursor,3) < 2) {
+            do eraseCursor();
+            let cursor =  cursor + 3;
+            do drawCursor();
+        }
+        return;
+    }
+
+    method boolean insertXO(boolean xTurn) {
+        if(~(a[cursor] = 0)) {
+            return xTurn;
+        }
+        if(xTurn) {
+            let a[cursor] = 1;
+            do drawX(cursor);
+        }
+        else {
+            let a[cursor] = -1;
+            do drawO(cursor);
+        }
+        return ~xTurn;
+    }
+
+    method int checkWinner() {
+        let count = 0;
+        while(count < 9) {
+            if(~(a[count] = 0) & (a[count] = a[count+1]) & (a[count+1] = a[count+2])) {
+                return a[count];
+            }
+            let count = count + 3;
+        }
+        let count = 0;
+        while(count < 3) {
+            if(~(a[count] = 0) & (a[count] = a[count+3]) & (a[count+3] = a[count+6])) {
+                return a[count];
+            }
+            let count = count + 1;
+        }
+        if(~(a[count] = 0) & (a[0] = a[4]) & (a[4] = a[8])) {
+            return a[0];
+        }
+        if(~(a[count] = 0) & (a[2] = a[4]) & (a[4] = a[6])) {
+            return a[2];
+        }
+        let count = 0;
+        while(count < 9) {
+            if(a[count] = 0) {
+                return 0;
+            }
+            let count = count + 1;
+        }
+        return 2;
+    }
+}
